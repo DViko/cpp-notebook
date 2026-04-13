@@ -10,11 +10,11 @@ This virtualization has two important consequences. First, each process believes
 
 ## The complete diagram
 
-> ### Here is the memory map of a typical C++ process under Linux, from highest address to lowest:
+### Here is the memory map of a typical C++ process under Linux, from highest address to lowest:
 
 
 ```text
-                    High addresses: 0x7FFF
+            High addresses: 0x7FFF
 
                 ----
 
@@ -84,31 +84,31 @@ This virtualization has two important consequences. First, each process believes
                         - Read-only, shareable between processes
 
 
-                    Low addresses:  0x0040
+            Low addresses:  0x0040
 ```
 
 ## Details of each region
 
->### .text(code)
->
-> - This is where your program's machine instructions reside — the result of compilation. This area is in read only : any attempt to write causes a Segmentation fault. This protection prevents the code from accidentally (or maliciously) modifying itself.
->
-> - On Linux, if several instances of the same program run simultaneously, they share the same physical pages for .text. The kernel is smart enough to only load machine code once into RAM.
+### .text(code)
 
-> ### .rodata(read-only data)
-> 
-> - String literals ( "Hello, world!"), `global` constants `const`, and some data constexprland here. As .text, this area is write protected:
+This is where program's machine instructions reside — the result of compilation. This area is in read only : any attempt to write causes a Segmentation fault. This protection prevents the code from accidentally (or maliciously) modifying itself.
+
+On Linux, if several instances of the same program run simultaneously, they share the same physical pages for .text. The kernel is smart enough to only load machine code once into RAM.
+
+### .rodata(read-only data)
+
+String literals ( "Hello, world!"), `global` constants `const`, and some data constexprland here. As .text, this area is write protected:
 
 ```cpp
     const char* greet = "Hello World !";    // "Hello world !" is in .rodata
                                             // `greet` (the pointer) is on the stack or in .data
 ```
 
-> - Attempt to modify the pointed content — for example via a const_castclumsy — is a undefined behavior which usually causes a crash.
+Attempt to modify the pointed content — for example via a const_castclumsy — is a undefined behavior which usually causes a crash.
 
->### .data(initialized data)
->
->  - Global and static variables explicitly initialized to a non-zero value are stored here. Their initial values ​​occupy space in the ELF executable on disk:
+### .data(initialized data)
+
+Global and static variables explicitly initialized to a non-zero value are stored here. Their initial values ​​occupy space in the ELF executable on disk:
 
 ```cpp
     int global_counter = 42;        // .data
@@ -122,32 +122,32 @@ This virtualization has two important consequences. First, each process believes
 
 ### .bss(uninitialized data)
 
-> - Global and static variables that are not initialized, or that are initialized to zero, are placed in `/var/lib` .bss. The peculiarity of this segment is that it does not occupy space in the executable on disk—only its size is recorded. When the program loads, the kernel allocates the area and fills it with zeros.
+Global and static variables that are not initialized, or that are initialized to zero, are placed in `/var/lib` .bss. The peculiarity of this segment is that it does not occupy space in the executable on disk—only its size is recorded. When the program loads, the kernel allocates the area and fills it with zeros.
 
 ```cpp
     int global_array[10000];    // .bss — 40,000 bytes in memory, / but ~0 bytes in the executable
     static long counter;        // .bss — initialized to 0 by the system
 ```
 
-> This is an important optimization: a program that declares large uninitialized global arrays does not produce a multi-megabyte executable.
+This is an important optimization: a program that declares large uninitialized global arrays does not produce a multi-megabyte executable.
 
 ### mmap (memory-mapped) region
 
-> Between the heap and the stack is an area used for memory mappings . This is where the dynamic loader ld-linuxplaces shared libraries .sosuch as `lib` libc.soand `lib` libstdc++.so. This area is also used for memory-mapped files mmap()and for very large dynamic allocations — malloc(and therefore `lib` new) automatically switches to mmap`lib` beyond a threshold (typically 128 KB with glibc).
+Between the heap and the stack is an area used for memory mappings . This is where the dynamic loader ld-linuxplaces shared libraries .sosuch as `lib` libc.soand `lib` libstdc++.so. This area is also used for memory-mapped files mmap()and for very large dynamic allocations — malloc(and therefore `lib` new) automatically switches to mmap`lib` beyond a threshold (typically 128 KB with glibc).
 
 ### heap
 
-> Dynamic memory area, managed by the allocator (glibc malloc/ free, which new/ deleteuse internally). The heap grows towards higher addresses. We will explore this in detail in section 5.1.3.
+Dynamic memory area, managed by the allocator (glibc malloc/ free, which new/ deleteuse internally). The heap grows towards higher addresses. We will explore this in detail in section 5.1.3.
 
 ### stack
 
-> Automatic memory area for function calls. Each thread has its own stack. It grows towards lower addresses. We will study this in detail in section 5.1.2.
+Automatic memory area for function calls. Each thread has its own stack. It grows towards lower addresses. We will study this in detail in section 5.1.2.
 
 ---
 
 ## View the memory card of a real process
 
-> Linux exposes the memory map of each process via the pseudo-filesystem /proc. Let's take a minimal program:
+Linux exposes the memory map of each process via the pseudo-filesystem /proc. Let's take a minimal program:
 
 ```cpp
                                             // demo_memory.cpp
@@ -180,14 +180,14 @@ This virtualization has two important consequences. First, each process believes
     }
 ```
 
-> Compile and run this program:
+### Compile and run this program:
 
 ```text
     g++ -std=c++17 -o demo_memory demo_memory.cpp
     ./demo_memory
 ```
 
-> The program's output (exact addresses may differ due to ASLR):
+### The program's output (exact addresses may differ due to ASLR):
 
 ```text
     PID: 12345  
@@ -200,15 +200,15 @@ This virtualization has two important consequences. First, each process believes
     stack             : 0x7ffd3b2a1e4c
 ```
 
-> Observe the address hierarchy: ` .text/` and ` .rodata/` are in the `lower` addresses (prefix / 0x56...), the `heap` is slightly `higher`, and the `stack` is in the `very high` addresses (prefix / 0x7ffd...). This is exactly the diagram seen above.
+Observe the address hierarchy: ` .text/` and ` .rodata/` are in the `lower` addresses (prefix / 0x56...), the `heap` is slightly `higher`, and the `stack` is in the `very high` addresses (prefix / 0x7ffd...). This is exactly the diagram seen above.
 
 ---
 
 ## ASLR: Why the addresses change with each execution
 
-> This isn't a coincidence: it's `ASLR` (Address Space Layout Randomization), a `security feature` enabled by default on modern Linux systems.
+This isn't a coincidence: it's `ASLR` (Address Space Layout Randomization), a `security feature` enabled by default on modern Linux systems.
 
-> ASLR randomizes the position of the stack, heap, shared libraries, and even executable code (when compiled as a PIE, Position-Independent Executable, which is the default with GCC and Clang on Ubuntu). The goal is to make memory corruption attacks (buffer overflow, return-oriented programming) much more difficult, because the attacker cannot predict the addresses.
+ASLR randomizes the position of the stack, heap, shared libraries, and even executable code (when compiled as a PIE, Position-Independent Executable, which is the default with GCC and Clang on Ubuntu). The goal is to make memory corruption attacks (buffer overflow, return-oriented programming) much more difficult, because the attacker cannot predict the addresses.
 
 With ASLR disabled, addresses become reproducible from one run to the next, which can facilitate experimentation with memory layout.
 
@@ -217,6 +217,6 @@ With ASLR disabled, addresses become reproducible from one run to the next, whic
 
 ## Summary
 
-> A process's memory diagram isn't a theoretical concept. It's a reality that can be observed and analyzed on a computer. Every declared variable, every allocated object, every called function ultimately ends up within a specific region of this diagram.
+A process's memory diagram isn't a theoretical concept. It's a reality that can be observed and analyzed on a computer. Every declared variable, every allocated object, every called function ultimately ends up within a specific region of this diagram.
 
 ---
