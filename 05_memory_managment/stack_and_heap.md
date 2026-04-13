@@ -2,7 +2,7 @@
 
 ## Overview
 
-> #### Every running C++ program has two main memory areas for storing its data: the `stack` and the `heap`. Understanding the difference between these two areas >is probably the most fundamental skill a C++ developer can acquire. It determines your ability to write correct, efficient, and leak-free code
+> #### Every running C++ program has two main memory areas for storing its data: the `stack` and the `heap`. Understanding the difference between these two areas is probably the most fundamental skill a C++ developer can acquire. It determines your ability to write correct, efficient, and leak-free code
 
 > #### The distinction is simple in principle: the stack is `automatic`, the heap is `manual`. But the implications of this difference permeate the entire language, from object lifetimes to production optimization strategies
 
@@ -25,7 +25,7 @@
 
 ---
 
-## When is the stack used?
+## When is the stack used ?
 
 > **`The compiler automatically places all local variables on the stack` — those that you declare inside a function or block:**
 
@@ -33,7 +33,9 @@
     void process_request()
     {
         int code = 200;                 // stack
+
         double response_time = 0.0;     // stack
+
         std::string status = "OK";      // the string object (small, fixed size) is on the stack
                                         // the actual characters may be on the heap,
                                         // or inside the object itself if SSO applies
@@ -41,7 +43,9 @@
         if (code == 200)
         {
             bool success = true;        // stack (scope limited to the `if` block)
+
         }                               // `success` no longer exists here — automatically removed
+        
     }                                   // `code`, `response_time` and `status` no longer exist here
 ```
 
@@ -52,7 +56,7 @@
 
 ---
 
-## When is the heap used?
+## When is the heap used ?
 
 #### The heap comes into play as soon as you need memory whose lifetime exceeds the scope of the function that created it, or whose size is not known at compile time:
 
