@@ -1,10 +1,10 @@
 # Memo: Memory of a process
 
-> When a program is run, the Linux kernel does not give it direct access to physical RAM. It assigns it a virtual address space — a private and isolated view of memory, translated into physical addresses by the hardware (MMU, Memory Management Unit ) in collaboration with the kernel.
+When a program is run, the Linux kernel does not give it direct access to physical RAM. It assigns it a virtual address space — a private and isolated view of memory, translated into physical addresses by the hardware (MMU, Memory Management Unit ) in collaboration with the kernel.
 
-> On a 64-bit system, this virtual space is theoretically immense (2⁴⁸ bytes, or 256 TB on x86_64 in practice), but only the regions actually used by the program are bound to physical memory. The rest simply doesn't exist from a hardware perspective. Any access to an unallocated address results in an error Segmentation fault.
+On a 64-bit system, this virtual space is theoretically immense (2⁴⁸ bytes, or 256 TB on x86_64 in practice), but only the regions actually used by the program are bound to physical memory. The rest simply doesn't exist from a hardware perspective. Any access to an unallocated address results in an error Segmentation fault.
 
-> This virtualization has two important consequences. First, each process believes it has all the memory to itself. Two programs can use the same virtual address without conflict, because they point to different physical locations. Second, the layout of memory regions is standardized : the kernel and the compiler agree on a conventional arrangement.
+This virtualization has two important consequences. First, each process believes it has all the memory to itself. Two programs can use the same virtual address without conflict, because they point to different physical locations. Second, the layout of memory regions is standardized : the kernel and the compiler agree on a conventional arrangement.
 
 ---
 
