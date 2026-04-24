@@ -1,14 +1,12 @@
 # Memo: Memory of a process
 
-When a program is run, the Linux kernel does not give it direct access to physical RAM. It assigns it a virtual address space — a private and isolated view of memory, translated into physical addresses by the hardware (MMU, Memory Management Unit ) in collaboration with the kernel.
+When a program is run, the Linux kernel does not give it direct access to physical RAM. It assigns it a virtual address space — a private and isolated view of memory, translated into physical addresses by the hardware (MMU, Memory Management Unit ) in collaboration with the kernel.The rest simply doesn't exist from a process's perspective. Any access to an unallocated address results in a Segmentation fault.
 
-On a 64-bit system, this virtual space is theoretically immense (2⁴⁸ bytes, or 256 TB on x86_64 in practice), but only the regions actually used by the program are bound to physical memory. The rest simply doesn't exist from a hardware perspective. Any access to an unallocated address results in an error Segmentation fault.
-
-This virtualization has two important consequences. First, each process believes it has all the memory to itself. Two programs can use the same virtual address without conflict, because they point to different physical locations. Second, the layout of memory regions is standardized : the kernel and the compiler agree on a conventional arrangement.
+This virtualization has two important consequences. First, each process believes it has all the memory to itself. Two programs can use the same virtual address without conflict, because they point to different physical locations. Second, the layout of memory regions is standardized. The kernel and the compiler agree on a conventional arrangement.
 
 ---
 
-## The complete diagram
+## Memory diagram
 
 ### Here is the memory map of a typical C++ process under Linux, from highest address to lowest:
 
@@ -91,20 +89,20 @@ This virtualization has two important consequences. First, each process believes
 
 ### .text(code)
 
-This is where program's machine instructions reside — the result of compilation. This area is in read only : any attempt to write causes a Segmentation fault. This protection prevents the code from accidentally (or maliciously) modifying itself.
+This is where the program's machine instructions reside — the result of compilation.This area is in read-only, any attempt to write causes a Segmentation fault. This protection prevents the code from accidentally (or maliciously) modifying itself.
 
-On Linux, if several instances of the same program run simultaneously, they share the same physical pages for .text. The kernel is smart enough to only load machine code once into RAM.
+On Linux, if several instances of the same program run simultaneously, they share the same physical pages for .text section. The kernel loads these pages only once and shares them between processes.
 
 ### .rodata(read-only data)
 
-String literals ( "Hello, world!"), `global` constants `const`, and some data constexprland here. As .text, this area is write protected:
+String literals ( "Hello, world!"), `global` constants `const`, and some data constexpr are also stored here. As .text, this area is write protected:
 
 ```cpp
     const char* greet = "Hello World !";    // "Hello world !" is in .rodata
                                             // `greet` (the pointer) is on the stack or in .data
 ```
 
-Attempt to modify the pointed content — for example via a const_castclumsy — is a undefined behavior which usually causes a crash.
+An attempt to modify the pointed-to content. For example via a const_cast — is undefined behavior which usually causes a crash.
 
 ### .data(initialized data)
 
@@ -122,7 +120,7 @@ Global and static variables explicitly initialized to a non-zero value are store
 
 ### .bss(uninitialized data)
 
-Global and static variables that are not initialized, or that are initialized to zero, are placed in `/var/lib` .bss. The peculiarity of this segment is that it does not occupy space in the executable on disk—only its size is recorded. When the program loads, the kernel allocates the area and fills it with zeros.
+Global and static variables that are not initialized, or that are initialized to zero, are placed in the .bss section. The peculiarity of this segment is that it does not occupy space in the executable on disk—only its size is recorded. When the program loads, the kernel allocates the area and fills it with zeros.
 
 ```cpp
     int global_array[10000];    // .bss — 40,000 bytes in memory, / but ~0 bytes in the executable
@@ -133,7 +131,7 @@ This is an important optimization: a program that declares large uninitialized g
 
 ### mmap (memory-mapped) region
 
-Between the heap and the stack is an area used for memory mappings . This is where the dynamic loader ld-linuxplaces shared libraries .sosuch as `lib` libc.soand `lib` libstdc++.so. This area is also used for memory-mapped files mmap()and for very large dynamic allocations — malloc(and therefore `lib` new) automatically switches to mmap`lib` beyond a threshold (typically 128 KB with glibc).
+Between the heap and the stack is an area used for memory mappings . This is where the dynamic loader ld-linux places shared libraries .so such as libc.so and libstdc++.so. This area is also used for memory-mapped files mmap()and for very large dynamic allocations — malloc(and therefore new) automatically switches to mmap beyond a threshold (typically 128 KB with glibc).
 
 ### heap
 
@@ -141,13 +139,11 @@ Dynamic memory area, managed by the allocator (glibc malloc/ free, which new/ de
 
 ### stack
 
-Automatic memory area for function calls. Each thread has its own stack. It grows towards lower addresses. We will study this in detail in section 5.1.2.
+Automatic memory area for function calls. Each thread has its own stack. It grows towards lower addresses.
 
 ---
 
-## View the memory card of a real process
-
-Linux exposes the memory map of each process via the pseudo-filesystem /proc. Let's take a minimal program:
+## View the memory of a real process
 
 ```cpp
                                             // demo_memory.cpp
@@ -180,13 +176,6 @@ Linux exposes the memory map of each process via the pseudo-filesystem /proc. Le
     }
 ```
 
-### Compile and run this program:
-
-```text
-    g++ -std=c++17 -o demo_memory demo_memory.cpp
-    ./demo_memory
-```
-
 ### The program's output (exact addresses may differ due to ASLR):
 
 ```text
@@ -208,12 +197,11 @@ Observe the address hierarchy: ` .text/` and ` .rodata/` are in the `lower` addr
 
 This isn't a coincidence: it's `ASLR` (Address Space Layout Randomization), a `security feature` enabled by default on modern Linux systems.
 
-ASLR randomizes the position of the stack, heap, shared libraries, and even executable code (when compiled as a PIE, Position-Independent Executable, which is the default with GCC and Clang on Ubuntu). The goal is to make memory corruption attacks (buffer overflow, return-oriented programming) much more difficult, because the attacker cannot predict the addresses.
+ASLR randomizes the position of the stack, heap, shared libraries, and even executable code (when compiled as a PIE, Position-Independent Executable, which is the default with GCC and Clang). The goal is to make memory corruption attacks (buffer overflow, return-oriented programming) much more difficult, because the attacker cannot predict the addresses.
 
 With ASLR disabled, addresses become reproducible from one run to the next, which can facilitate experimentation with memory layout.
 
-⚠️ `Never disable ASLR in production. It is a critical security protection.`
-
+### ⚠️  `Never disable ASLR in production. It is a critical security protection.`
 
 ## Summary
 
