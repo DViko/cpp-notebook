@@ -12,28 +12,21 @@ This freedom comes at a cost. Each heap allocation involves non-trivial work per
 
 When you write `new int(42)` in C++, here's what happens behind the scenes:
 
-- `operator new` is invoked, which may internally call `malloc()` (implementation-dependent, for example, glibc on Linux).
-
-- The allocator (`ptmalloc2`) searches for a sufficiently large free block.
-
+- operator `new` is invoked, which may internally call `malloc()` (implementation-dependent, for example, glibc on Linux).
+- The allocator (**ptmalloc2**) searches for a sufficiently large free block.
 - If found, the block is marked as occupied and its address is returned.
-
 - Otherwise, the allocator requests memory from the Linux kernel via:
 
     - `brk()` — to extend the heap.
-
     - `mmap()` — for large allocations.
 
-- The kernel updates the process page tables and returns virtual memory.
-
+- The kernel updates the process page tables and returns **virtual memory**.
 - The address is returned to your program.
 
 The reverse process occurs during `delete`:
 
-- `operator delete` releases the block (often via `free()`).
-
+- operator `delete` releases the block (often via `free()`).
 - The allocator marks it as free.
-
 - Memory is usually **not returned immediately** to the OS, but kept for future reuse.
 
 ---
@@ -51,7 +44,7 @@ This layered mechanism explains why heap allocation is more expensive than stack
 
     ▼
 
-    malloc / free                           (user-space allocator, e.g. ptmalloc2)
+    malloc / free                           (user-space allocator, for example ptmalloc2)
                                             manages free/used blocks
     ▼                                       avoids system calls when possible
                                    
@@ -71,20 +64,16 @@ Each layer adds overhead, which explains why heap allocation is slower than stac
 
 How expensive is new compared to stack allocation? It depends, but typical orders of magnitude are:
 
-- `Stack allocation:` ~1–2 CPU cycles
-
-- `Heap allocation (best case)`: ~50–100 ns
-
-- `Heap allocation (worst case)`: several microseconds
+- **Stack allocation**: ~1–2 CPU cycles
+- **Heap allocation (best case)**: ~50–100 ns
+- **Heap allocation (worst case)**: several microseconds
 
 These costs are negligible for a single allocation, but in tight loops or high-throughput systems, they become significant.
 
 This is why high-performance C++ aims to minimize dynamic allocations by:
 
 - reserving memory in advance (`std::vector::reserve`)
-
 - using custom allocators
-
 - preferring stack allocation when possible
 
 ---
@@ -157,19 +146,14 @@ The key strength of the heap is that object lifetime is not tied to scope:
 This is essential for:
 
 - dynamic data structures (trees, graphs, linked lists)
-
 - polymorphism
-
 - runtime-sized buffers
-
 - cross-function or shared data
 
 But every `new` must match exactly one `delete`:
 
 - Missing `delete` → memory leak
-
 - Double `delete` → undefined behavior
-
 - Use after free → undefined behavior
 
 ---
@@ -267,21 +251,15 @@ Catching `std::bad_alloc` does **not guarantee** future memory availability.
 ## Summary
 
 - **Flexibility**: no constraints on lifetime or size
-
 - **Capacity**: limited by system memory
-
 - **Sharing**: accessible across threads
-
 - **Cost**: slower than stack allocation
-
 - **Fragmentation**: reduces efficiency over time
-
 - **Responsibility**: manual management leads to errors
 
 Modern C++ mitigates these risks using:
 
 - **RAII**
-
 - **smart pointers**
 
 ---
