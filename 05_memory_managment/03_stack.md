@@ -1,4 +1,4 @@
-# Memo: Stack
+# Stack
 
 ## A hardware mechanism, not a software one
 
@@ -8,7 +8,6 @@ On x86_64, a dedicated register **RSP (Stack Pointer)** always points to the top
 
 Allocating memory on the stack is literally a matter of subtracting a value from `RSP`.  
 Freeing memory means adding a value back to `RSP`.
-
 Both operations take about one CPU cycle.
 
 There is:

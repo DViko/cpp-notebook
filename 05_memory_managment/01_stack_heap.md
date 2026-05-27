@@ -1,15 +1,14 @@
-# Memo: Stack vs Heap
+# Stack vs Heap
 
 ## Overview
 
 Every running C++ program uses two main memory regions to store data: the **stack** and the **heap**.
 
-Understanding the difference between these two areas is one of the most fundamental skills a C++ developer can acquire. It directly impacts your ability to write correct, efficient, and memory-safe code.
+Understanding the difference between these two areas is one of the most fundamental skills a C++ developer. It directly impacts your ability to write correct, efficient, and memory-safe code.
 
 The distinction is simple in principle:
 
 - the stack is **automatic**
-
 - the heap is **manual**
 
 But the implications go much deeper, affecting everything from object lifetime to performance optimization strategies.
@@ -35,9 +34,7 @@ The **heap** is more like a warehouse:
 - you can place them anywhere
 - you can retrieve them in any order
 
-This makes it flexible and large, but you must keep track of what you stored and where.
-
-If you forget to retrieve something, it occupies space indefinitely. Each operation is also slower because it involves searching for free space and updating bookkeeping structures.
+This makes it flexible and large, but you must keep track of what you stored and where. If you forget to retrieve something, it occupies space indefinitely. Each operation is also slower because it involves searching for free space and updating bookkeeping structures.
 
 This analogy is not perfect, but it highlights the key trade-offs:
 
