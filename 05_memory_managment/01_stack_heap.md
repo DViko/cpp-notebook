@@ -1,96 +1,80 @@
-# Stack vs Heap
+# 📓 memo: Stack vs Heap
 
-## Overview
+## 📝 Overview
 
-Every running C++ program uses two main memory regions to store data: the **stack** and the **heap**.
+> Каждая запущенная программа на C++ использует две основные области памяти для хранения данных: **stack** и **heap**. Понимание различий между этими двумя областями — один из фундаментальных навыков для C++ разработчика. Это напрямую влияет на способность писать корректный, эффективный и безопасный с точки зрения работы с памятью код.
 
-Understanding the difference between these two areas is one of the most fundamental skills a C++ developer. It directly impacts your ability to write correct, efficient, and memory-safe code.
+🔹 Основное различие:
 
-The distinction is simple in principle:
+  - **stack** — управляется системой
+  - **heap** — управляется программистом
 
-- the stack is **automatic**
-- the heap is **manual**
+> Однако последствия этого гораздо глубже и затрагивают всё — от времени жизни объектов до стратегий оптимизации производительности.
 
-But the implications go much deeper, affecting everything from object lifetime to performance optimization strategies.
+## 📝 Analogy
 
----
+🔹 **Stack** работает как стопка тарелок в ресторане:
 
-## Analogy: stack of plates vs warehouse
+  - кладем сверху
+  - снимаем сверху
 
-Before diving into technical details, here is a simple analogy.
+> Действие происходит быстро и упорядоченно, не требуя принятия решений. Следующим элементом для удаления всегда оказывается тот, который был добавлен последним. Однако размер стека ограничен. Попытка сложить стопкой тысячи тарелок — вся конструкция рухнет.
 
-The **stack** works like a stack of plates in a restaurant:
+🔹**Heap** больше похож на склад:
 
-- you place a plate on top
-- you remove it from the top
+  - можно хранить множество объектов
+  - размещать в любом месте
+  - извлекать в любом порядке
 
-It is fast, ordered, and requires no decisions. The next item to remove is always the last one added.
+> Это обеспечивает гибкость и большую вместимость, однако приходится отслеживать, что и где именно было сохранено. Если забыть извлечь какой-либо объект, он будет занимать место неограниченно долго. Кроме того, каждая операция выполняется медленнее, так как требует поиска свободного пространства и обновления служебных структур данных.
 
-However, the size is limited. Try stacking a thousand plates, and the whole thing collapses.
+🔹Эта аналогия не идеальна, но она подчеркивает ключевые моменты:
 
-The **heap** is more like a warehouse:
+  - **Stack** → быстрый но ограниченный, управляется системой  
+  - **Heap** → вместительная но медленная, управляется программистом
 
-- you can store many objects (within available space)
-- you can place them anywhere
-- you can retrieve them in any order
+## 📝 When is the stack used ?
 
-This makes it flexible and large, but you must keep track of what you stored and where. If you forget to retrieve something, it occupies space indefinitely. Each operation is also slower because it involves searching for free space and updating bookkeeping structures.
-
-This analogy is not perfect, but it highlights the key trade-offs:
-
-- **Stack** → fast and automatic, but limited and rigid  
-- **Heap** → flexible and large, but slower and manual
-
----
-
-## When is the stack used?
-
-The compiler automatically places **local variables** on the stack:
+🔹Компилятор автоматически размещает **local variables** в **stack**:
 
 ```cpp
     void process_request()
     {
-        int status_code = 200;        // stack
+        int status_code = 200;          // stack
 
-        double response_time = 0.0;   // stack
+        double response_time = 0.0;     // stack
 
-        std::string message = "OK";   // object on stack (internal data may use heap)
+        std::string message = "OK";     // object on stack (internal data may use heap)
 
         if (status_code == 200)
         {
-            bool success = true;      // stack (limited to this block)
-        }
-
-        // 'success' no longer exists here
-    }
-
-    // all variables are destroyed here
+            bool success = true;        // stack (limited to this block)
+        }                               // 'success' no longer exists here
+    }                                   // all variables are destroyed here
 ```
 
-Each function call creates a stack frame, which contains:
+🔹 Каждый вызов функции создает **stack frame**, содержащий:
 
-- local variables
-- function parameters
-- return address
+  - локальные переменные
+  - параметры функции
+  - адрес возврата
 
-When the function returns, the entire frame is destroyed instantly. This is just a matter of moving the **stack pointer**.
+> Когда функция завершается, весь **stack frame** мгновенно уничтожается.
 
-That is why the stack is so efficient:
+🔹 Почему стек так эффективен:
 
-- no search for free memory
-- no fragmentation
-- no delayed cleanup
+  - нет поиска свободной памяти
+  - нет фрагментации
+  - нет задержки очистки
 
-Allocation and deallocation are reduced to a simple CPU register adjustment.
+> Выделение и освобождение памяти сводятся к простой корректировке регистров CPU.
 
----
+## 📝 When is the heap used ?
 
-## When is the heap used?
+🔹 **Heap** используется когда:
 
-The heap is used when:
-
-- memory must outlive the function that created it
-- size is not known at compile time
+  - память должна сохраняться после завершения функции, которая её выделила
+  - размер неизвестен на этапе компиляции
 
 ```cpp
     int* create_array(int size)
@@ -110,26 +94,23 @@ The heap is used when:
     }
 ```
 
-With the heap:
+🔹 При использовании кучи:
 
-- you decide **when to allocate** (`new`)
-- and **when to free** (`delete`)
+  - программист решает когда выделить память: **to allocate** ` new `
+  - программист решает когда освободить память: **to free** ` delete `
 
-This flexibility enables:
+🔹 Эта гибкость позволяет создавать:
 
-- dynamic data structures
-- long-lived objects
-- variable-sized buffers
+  - **dynamic data structures** — динамические структуры данных
+  - **long-lived objects** — объекты с длительным временем жизни
+  - **variable-sized buffers** — буферы переменного размера
 
-But it comes at a cost:
+🔹 Однако эта гибкость имеет свою цену:
 
-- allocation is slower
-- forgetting `delete` causes memory leaks
+  - выделение памяти происходит медленнее
+  - выделенную память необходимо освобождать
 
-
----
-
-## The differences at a glance
+## 📝 The differences
 
 ```text
 |               | Stack                     | Heap                          |
@@ -144,57 +125,49 @@ But it comes at a cost:
 | Threads       | Thread-local              | Shared between threads        |
 ```
 
-**Notes**
+💡 **Заметка:**
 
-- On Linux, the default stack size is typically ~8 MB (configurable via ulimit -s)
-- This limit helps detect infinite recursion via stack overflow
-- The heap can grow much larger (virtual memory, often many GB or more)
+- В Linux размер стека по умолчанию обычно составляет ~8 МБ.
+- Это ограничение позволяет выявлять бесконечную рекурсию благодаря возникновению переполнения стека.
+- Куча может достигать гораздо больших размеров (виртуальная память, зачастую многие гигабайты и более).
 
----
+## 📝 Common pitfall
 
-## A common pitfall: object vs resources
-
-> ### Confusing the object with its resources:
->
-> - #### One subtle point deserves to be raised now, as it is a frequent source of confusion:
+🔹 Стоит упомянуть один важный нюанс, поскольку он часто становится источником путаницы:
 
 ```cpp
     void process()
     {
-        std::vector<int> numbers = {1, 2, 3, 4, 5};
+        std::vector<int> numbers {1, 2, 3, 4, 5};
     }
 ```
 
-Where is numbers stored?
+🔹 Где хранятся числа?
 
-- The `std::vector` object itself (pointer, size, capacity) → **stack**
-- The actual elements → **heap**
+  - Объект ` std::vector ` (pointer, size, capacity) → **stack**
+  - Элементы → **heap**
 
-When the function ends:
+🔹 Когда функция завершается:
 
-- the vector object is destroyed (stack)
-- its destructor is called
-- the **destructor frees** the **heap** memory
+  - объект ` std::vector ` уничтожается в **stack**
+  - вызывается **destructor** объекта
+  - **destructor** освобождает память в **heap**
 
-This is **RAII** in action.
+Это **RAII** в действии.
 
----
+## 📝 Stack + Heap together
 
-## Stack + Heap together
+🔹 Эта двойственность встречается повсюду в современном C++:
 
-This duality appears everywhere in modern C++:
+- STL: ` std::vector `, ` std::string `, ` std::map `
+- Smart pointers: ` std::unique_ptr `, ` std::shared_ptr `
 
-- `std::vector`
-- `std::string`
-- `std::map`
-- smart pointers (`std::unique_ptr`, `std::shared_ptr`)
+🔹 Шаблон:
 
-Pattern:
+  - управляющий объект — **stack**
+  - управляемые данные — **heap**
+  - **destructor** — механизм очистки
 
-- control object → stack
-- managed data → heap
-- destructor → cleanup bridge
-
-This design is one of the core strengths of C++: it combines performance with automatic resource management when used correctly.
+> Такой подход одна из ключевых сильных сторон C++. При правильном использовании он сочетает в себе высокую производительность и автоматическое управление ресурсами.
 
 ---
